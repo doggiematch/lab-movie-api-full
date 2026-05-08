@@ -1,11 +1,14 @@
-jest.mock("../config/db", () => ({
-  query: jest.fn(),
+jest.mock("../config/prisma", () => ({
+  pelicula: {
+    findUnique: jest.fn(),
+  },
+  favorito: {
+    create: jest.fn(),
+    findMany: jest.fn(),
+  },
 }));
 
-jest.mock("../utils/verificarPelicula", () => jest.fn());
-
-const pool = require("../config/db");
-const verificarPeliculaExiste = require("../utils/verificarPelicula");
+const prisma = require("../config/prisma");
 const {
   anadirFavorito,
   listarFavoritos,
@@ -19,8 +22,8 @@ describe("favoritosController with mocks", () => {
   test("anadirFavorito sends unexpected errors to next", async () => {
     const error = new Error("Database error");
 
-    verificarPeliculaExiste.mockResolvedValue({ id: 1 });
-    pool.query.mockRejectedValue(error);
+    prisma.pelicula.findUnique.mockResolvedValue({ id: 1 });
+    prisma.favorito.create.mockRejectedValue(error);
 
     const req = {
       params: { peliculaId: "1" },
@@ -40,7 +43,7 @@ describe("favoritosController with mocks", () => {
   test("listarFavoritos sends query errors to next", async () => {
     const error = new Error("Error listing favorites");
 
-    pool.query.mockRejectedValue(error);
+    prisma.favorito.findMany.mockRejectedValue(error);
 
     const req = {
       usuario: { id: 1 },
